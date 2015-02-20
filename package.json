@@ -1,13 +1,13 @@
 {
-  "name": "test-result-reporter",
+  "name": "js-test-reporter",
   "version": "0.0.1",
   "description": "middleware that gathers remote test results",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Joachim Revol-Tissot",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "ejs": "^2.2.4",
     "express": "^4.11.2",

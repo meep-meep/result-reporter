@@ -60,7 +60,7 @@ app.get(
     function(request, response, next) {
         getRenderedMarkup(
             {stats: makeStats(results)},
-            'results.html'
+            '../templates/results.html'
             )
             .then(function(rendererView) {
                 response.send(rendererView);
