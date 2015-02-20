@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>test report</title>
+        <style type="text/css">
+            body {
+                margin: 0;
+                padding: 0;
+
+                font-family: sans-serif;
+                background: #eee;
+            }
+
+            .title {
+                margin: 0 0 10px 0;
+                padding: 10px;
+                width: 100%;
+                
+                background: #ddd;
+                color: #222;
+                border-bottom: 1px solid #aaa;
+            }
+
+            .ua-header {
+                width: 120px;
+                text-align: center;
+                padding: 10px;
+                margin: 5px 5px 0 5px;
+                color: white;
+            }
+
+            .error-report {
+                max-width: 500px;
+                margin: 0 5px 10px 5px;
+                padding: 10px;
+
+                background: #fff;
+            }
+
+            .relaunch {
+                display: inline-block;
+                padding: 3px;
+                width: 40px;
+                margin-top: 10px;
+
+                background: #5362b9;
+                color: white;
+                text-decoration: none;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="title">Test results</div>
+<% for(var ua in stats) { %>
+        <div class="ua-header" style="background: rgb(<%= parseInt(stats[ua].status * 200) %>, <%= parseInt((1 - stats[ua].status) * 170) %>, <%= parseInt(stats[ua].status * 80) %>);">
+            <%= ua %> (<%= parseInt((1 - stats[ua].status) * 100) %>% success)
+        </div>
+    <% if(stats[ua]['full-failure'].length || stats[ua]['partial-failure'].length) { %>
+    <div class="error-report" style="border: 2px solid rgb(<%= parseInt(stats[ua].status * 200) %>, <%= parseInt((1 - stats[ua].status) * 170) %>, <%= parseInt(stats[ua].status * 80) %>);">
+    <% } %>
+
+        <% if(stats[ua]['full-failure'].length) { %>
+            <p>Test<%= stats[ua]['full-failure'].length > 1 ? 's':'' %> failing every time :</p>
+            
+            <% stats[ua]['full-failure'].forEach(function(conditions) { %>
+
+            <div>
+                <a class="relaunch" href="<%= conditions.testLocation %>/tests?tags=<%= conditions.tags.replace(' ', '') %>&oneShot=true&env=<%= conditions.env %>" target="_blank"> test </a>
+                <span> <b><%= conditions.tags.split(',')[0] %></b><%= conditions.tags.split(',').length > 1 ? ',':'' %> <%= conditions.tags.split(',').slice(1).join(',') %> </span>
+            </div>
+
+            <% }); %>
+        <% } %>
+
+        <% if(stats[ua]['partial-failure'].length) { %>
+            <p>Test<%= stats[ua]['partial-failure'].length > 1 ? 's':'' %> failing sometimes only :</p>
+            <% stats[ua]['partial-failure'].forEach(function(conditions) { %>
+
+            <div>
+                <a class="relaunch" href="<%= conditions.testLocation %>/tests?tags=<%= conditions.tags.replace(' ', '') %>&oneShot=true&env=<%= conditions.env %>" target="_blank"> test </a>
+                <span> <b><%= conditions.tags.split(',')[0] %></b><%= conditions.tags.split(',').length > 1 ? ',':'' %> <%= conditions.tags.split(',').slice(1).join(',') %> </span>
+            </div>
+
+            <% }); %>
+        <% } %>
+
+    <% if(stats[ua]['full-failure'].length || stats[ua]['partial-failure'].length) { %>
+    </div>
+    <% } %>
+<% } %>
+
+        <script type="text/javascript">
+            setTimeout(function() {
+                location.reload();
+            }, 1000);
+        </script>
+    </body>
+</html>
