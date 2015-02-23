@@ -27,6 +27,7 @@
                 padding: 10px;
                 margin: 5px 5px 0 5px;
                 color: white;
+                cursor: pointer;
             }
 
             .error-report {
@@ -48,16 +49,20 @@
                 text-decoration: none;
                 text-align: center;
             }
+
+            .collapsed {
+                display: none;
+            }
         </style>
     </head>
     <body>
         <div class="title">Test results</div>
 <% for(var ua in stats) { %>
-        <div class="ua-header" style="background: rgb(<%= parseInt(stats[ua].status * 200) %>, <%= parseInt((1 - stats[ua].status) * 170) %>, <%= parseInt(stats[ua].status * 80) %>);">
+        <div id="ua-header-<%= ua.replace(' ', '-') %>" class="ua-header" style="background: rgb(<%= parseInt(stats[ua].status * 200) %>, <%= parseInt((1 - stats[ua].status) * 170) %>, <%= parseInt(stats[ua].status * 80) %>);">
             <%= ua %> (<%= parseInt((1 - stats[ua].status) * 100) %>% success)
         </div>
     <% if(stats[ua]['full-failure'].length || stats[ua]['partial-failure'].length) { %>
-    <div class="error-report" style="border: 2px solid rgb(<%= parseInt(stats[ua].status * 200) %>, <%= parseInt((1 - stats[ua].status) * 170) %>, <%= parseInt(stats[ua].status * 80) %>);">
+    <div id="details-<%= ua.replace(' ', '-') %>" class="error-report collapsed" style="border: 2px solid rgb(<%= parseInt(stats[ua].status * 200) %>, <%= parseInt((1 - stats[ua].status) * 170) %>, <%= parseInt(stats[ua].status * 80) %>);">
     <% } %>
 
         <% if(stats[ua]['full-failure'].length) { %>
@@ -90,10 +95,29 @@
     <% } %>
 <% } %>
 
+        <script>
+            function toggleDetails(resultSetName) {
+                var target = document.getElementById('details-' + resultSetName);
+                if(target.classList.contains('collapsed')) {
+                    target.classList.remove('collapsed');
+                }
+                else {
+                    target.classList.add('collapsed');
+                }
+
+            }
+
+            var element;
+            <% for(var ua in stats) { %>
+                element = document.getElementById('ua-header-<%= ua.replace(' ', '-') %>');
+                element.addEventListener('click', toggleDetails.bind(null,'<%= ua.replace(' ', '-') %>'))
+            <% } %>
+        </script>
+
         <script type="text/javascript">
-            setTimeout(function() {
-                location.reload();
-            }, 1000);
+            // setTimeout(function() {
+            //     location.reload();
+            // }, 10000);
         </script>
     </body>
 </html>
