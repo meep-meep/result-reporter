@@ -12,10 +12,10 @@ var EventEmitter = require('events').EventEmitter;
 var customwriters = [];
 var customReader = null;
 var triggers = new EventEmitter();
-var results = {};
 
 
 var app = express();
+
 
 app.get(
     '/report',
@@ -23,24 +23,9 @@ app.get(
         var qs = querystring.parse(request.url.split('?')[1]);
         qs.failures = parseInt(qs.failures);
         qs.testIndex = parseInt(qs.testIndex);
-
-        var ua = useragent.parse(request.headers['user-agent']);
-        var os = ua.OS;
-        if(ua.isAndroid) {
-            os = 'Android ' + ua.Version;
-        }
-        else if(ua.isiPhone || ua.isiPad || ua.isiPod) {
-            os = 'IOS ' + ua.Version;
-        }
-        if(!results[ua.Browser + '-' + os]) {
-            results[ua.Browser + '-' + os] = {};
-        }
-        if(!results[ua.Browser + '-' + os][qs.testRunnerSession]) {
-            results[ua.Browser + '-' + os][qs.testRunnerSession] = {};
-        }
-        results[ua.Browser + '-' + os][qs.testRunnerSession][qs.testIndex] = qs;
+        qs.ua = useragent.parse(request.headers['user-agent']);
+        qs.reportTime = +(new Date());
         
-        qs.ua = ua;
         customwriters.forEach(function(writer) {
             writer(qs);
         });
@@ -49,17 +34,18 @@ app.get(
 app.get(
     '/results/raw.json',
     function(request, response, next) {
+        var results = getResults();
         response.send({
-                rawResults: results,
-                stats: makeStats(getResults())
-            });
+            rawResults: results,
+            stats: makeStats(results)
+        });
     });
 
 app.get(
     '/results',
     function(request, response, next) {
         getRenderedMarkup(
-            {stats: makeStats(results)},
+            {stats: makeStats(getResults())},
             '../templates/results.html'
             )
             .then(function(rendererView) {
@@ -84,48 +70,64 @@ function getRenderedMarkup(templateData, templateFileName) {
     });
 }
 
+function formatUa(ua) {
+    var os = ua.OS;
+    if(ua.isAndroid) {
+        os = 'Android ' + ua.Version;
+    }
+    else if(ua.isiPhone || ua.isiPad || ua.isiPod) {
+        os = 'IOS ' + ua.Version;
+    }
+
+    return ua.Browser + '-' + os;
+}
+
 function makeStats(results) {
     var stats = {};
 
-    for(var ua in results) {
-        if(!stats[ua]) {
-            stats[ua] = {
+    results.forEach(function(result) {
+        var testIndex = result.testIndex;
+        var testRunnerSession = result.testRunnerSession;
+        var target = result.target;
+        if(!target) {
+            target = formatUa(result.ua);
+        }
+        if(!stats[target]) {
+            stats[target] = {
                 tests: [],
                 status: 0,
                 'full-failure': [],
                 'partial-failure': []
             };
         }
-        // aggregate result sets
-        for(var resultSet in results[ua]) {
-            for(var testIndex in results[ua][resultSet]) {
-                results[ua][resultSet][testIndex].failures = parseInt(results[ua][resultSet][testIndex].failures);
-                if(stats[ua].tests[parseInt(testIndex)] === undefined) {
-                    stats[ua].tests[parseInt(testIndex)] = {
-                        conditions: results[ua][resultSet][testIndex],
-                        min: results[ua][resultSet][testIndex].failures,
-                        max: results[ua][resultSet][testIndex].failures,
-                        total: 1,
-                        failures: (results[ua][resultSet][testIndex].failures) ? 1 : 0
-                    };
-                }
-                else {
-                    stats[ua].tests[parseInt(testIndex)].min = Math.min(stats[ua].tests[parseInt(testIndex)], results[ua][resultSet][testIndex].failures);
-                    stats[ua].tests[parseInt(testIndex)].max = Math.max(stats[ua].tests[parseInt(testIndex)], results[ua][resultSet][testIndex].failures);
-                    stats[ua].tests[parseInt(testIndex)].total += 1;
-                    stats[ua].tests[parseInt(testIndex)].failures += (results[ua][resultSet][testIndex].failures) ? 1 : 0;
-                }
-            }
-        }
 
-        stats[ua].tests.forEach(function(testStats, index) {
+        if(stats[target].tests[testIndex] === undefined) {
+            stats[target].tests[testIndex] = {
+                conditions: result,
+                min: result.failures,
+                max: result.failures,
+                total: 1,
+                failures: result.failures ? 1 : 0
+            };
+        }
+        else {
+            stats[target].tests[testIndex].min = Math.min(stats[target].tests[testIndex], result.failures);
+            stats[target].tests[testIndex].max = Math.max(stats[target].tests[testIndex], result.failures);
+            stats[target].tests[testIndex].total += 1;
+            stats[target].tests[testIndex].failures += result.failures ? 1 : 0;
+        }
+    });
+
+    for(var target in stats) {
+        // aggregate result sets
+        stats[target].tests.forEach(function(testStats, index) {
             var ratio = testStats.failures / testStats.total;
-            stats[ua].status = Math.max(stats[ua].status, ratio);
+            stats[target].status = Math.max(stats[target].status, ratio);
             if(ratio === 1) {
-                stats[ua]['full-failure'].push(stats[ua].tests[index].conditions);
+                stats[target]['full-failure'].push(stats[target].tests[index].conditions);
             }
             else if(ratio > 0) {
-                stats[ua]['partial-failure'].push(stats[ua].tests[index].conditions);
+                stats[target]['partial-failure'].push(stats[target].tests[index].conditions);
             }
         });
     }
@@ -134,17 +136,17 @@ function makeStats(results) {
 }
 
 function getResults() {
-    if(customReader) {
-        return customReader();
+    if(!customReader) {
+        throw(new Error('no reader set'));
     }
-    return results;
+    return customReader();
 }
 
 function setCustomReader(reader) {
     customReader = reader;
 }
 
-function addCustomWriter(writer) {
+function addWriter(writer) {
     customwriters.push(writer);
 }
 
@@ -158,11 +160,17 @@ function trigger(eventName) {
     });
 }
 
+function setDataAdapter(adapter) {
+    setCustomReader(adapter.reader.bind(adapter));
+    addWriter(adapter.writer.bind(adapter));
+}
+
 
 module.exports = {
     middleware: app,
+    setDataAdapter: setDataAdapter,
     setReader: setCustomReader,
-    addWriter: addCustomWriter,
+    addWriter: addWriter,
 
     on: triggers.on.bind(triggers),
     once: triggers.once.bind(triggers),
