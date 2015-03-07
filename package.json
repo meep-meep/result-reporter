@@ -1,5 +1,5 @@
 {
-  "name": "js-test-reporter",
+  "name": "mm-result-reporter",
   "version": "0.0.1",
   "description": "middleware that gathers remote test results",
   "main": "src/index.js",
