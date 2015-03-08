@@ -9,7 +9,7 @@ var useragent = require('express-useragent');
 var EventEmitter = require('events').EventEmitter;
 
 
-var customwriters = [];
+var customWriters = [];
 var customReader = null;
 var triggers = new EventEmitter();
 
@@ -26,31 +26,36 @@ app.get(
         qs.ua = useragent.parse(request.headers['user-agent']);
         qs.reportTime = +(new Date());
         
-        customwriters.forEach(function(writer) {
-            writer(qs);
-        });
+        RSVP.all(customWriters.map(function(customWriter) {
+            return customWriter(qs);
+        }));
     });
 
 app.get(
     '/results/raw.json',
     function(request, response, next) {
-        var results = getResults();
-        response.send({
-            rawResults: results,
-            stats: makeStats(results)
+        getResults().then(function(results) {
+            response.send({
+                rawResults: results,
+                stats: makeStats(results)
+            });
         });
     });
 
 app.get(
     '/results',
     function(request, response, next) {
-        getRenderedMarkup(
-            {stats: makeStats(getResults())},
-            '../templates/results.html'
-            )
-            .then(function(rendererView) {
-                response.send(rendererView);
-            })
+        getResults()
+            .then(function(results) {
+                console.log('got results', results)
+                return getRenderedMarkup(
+                    {stats: makeStats(results)},
+                    '../templates/results.html'
+                    )
+                    .then(function(rendererView) {
+                        response.send(rendererView);
+                    })
+            });
     });
 
 
@@ -147,7 +152,7 @@ function setCustomReader(reader) {
 }
 
 function addWriter(writer) {
-    customwriters.push(writer);
+    customWriters.push(writer);
 }
 
 function addTrigger(eventName, callback) {
