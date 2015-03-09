@@ -23,7 +23,7 @@ app.get(
         var qs = querystring.parse(request.url.split('?')[1]);
         qs.failures = parseInt(qs.failures);
         qs.testIndex = parseInt(qs.testIndex);
-        qs.ua = useragent.parse(request.headers['user-agent']);
+        qs.ua = request.headers['user-agent'];
         qs.reportTime = +(new Date());
         
         RSVP.all(customWriters.map(function(customWriter) {
@@ -47,7 +47,6 @@ app.get(
     function(request, response, next) {
         getResults()
             .then(function(results) {
-                console.log('got results', results)
                 return getRenderedMarkup(
                     {stats: makeStats(results)},
                     '../templates/results.html'
@@ -76,15 +75,16 @@ function getRenderedMarkup(templateData, templateFileName) {
 }
 
 function formatUa(ua) {
-    var os = ua.OS;
-    if(ua.isAndroid) {
-        os = 'Android ' + ua.Version;
+    var parsedUa = useragent.parse(ua);
+    var os = parsedUa.OS;
+    if(parsedUa.isAndroid) {
+        os = 'Android ' + parsedUa.Version;
     }
-    else if(ua.isiPhone || ua.isiPad || ua.isiPod) {
-        os = 'IOS ' + ua.Version;
+    else if(parsedUa.isiPhone || parsedUa.isiPad || parsedUa.isiPod) {
+        os = 'IOS ' + parsedUa.Version;
     }
 
-    return ua.Browser + '-' + os;
+    return parsedUa.Browser + '-' + os;
 }
 
 function makeStats(results) {
