@@ -4,27 +4,87 @@
         <title>test report</title>
         <link rel="stylesheet" type="text/css" href="/styles/base.css"/>
         <style type="text/css">
-            .ua-header {
-                display: inline-block;
-                margin: 5px 5px 0 10px;
+            .ua-header-box {
+                display: table;
+                margin: 5px 5px 0 10px;  
+                color: #444;
+                user-select: none;          
             }
 
-            .error-report {
-                max-width: 500px;
-                margin: 0 5px 10px 5px;
-                padding: 10px;
-
-                background: #fff;
-                font-size: 14px;
+            .ua-header-box.open {
+                border-radius: 3px 3px 0 0;
             }
 
-            .relaunch {
-                display: inline-block;
-                margin-top: 2px;
+            .ua-header-box.closed {
+                border-radius: 3px;
+                transition: border-radius 0s 0.1s;
             }
 
             .collapsed {
                 display: none;
+            }
+
+            .expand-hint {
+                height: 16px;
+                background: url('/styles/images/arrow-expand-down.png') no-repeat center top;
+            }
+
+            .failed-test-line {
+                margin-top: 2px;
+                position: relative;
+                height: 36px;
+            }
+
+            .first-tag,
+            .other-tags {
+                line-height: 36px;
+            }
+
+            .first-tag {
+                margin-left: 10px;
+                font-weight: bold;
+            }
+
+            .error-report {
+                max-width: 500px;
+                margin: 0 5px 10px 10px;
+                padding: 10px;
+
+                background: #fff;
+                font-size: 14px;
+                border-radius: 0 3px 3px 3px;
+                color: #444;
+                overflow: hidden;
+            }
+
+            .error-report.closed {
+                margin-top: 0;
+                margin-bottom: 0;
+                max-height: 0;
+                transition: max-height 0.1s, padding-top 0s 0.1s, padding-bottom 0s 0.1s;
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+
+            .error-report.open {
+                max-height: 9999px;
+                transition: max-height 0.1s;
+            }
+            .expand-hint.closed {
+                max-height: 0;
+            }
+
+            .expand-hint.open {
+                max-height: 9999px;
+                transition: max-height 0s 0.1s;
+            }
+
+            .relaunch {
+                color: #444;
+                background: rgb(255, 227, 227);
+                position: absolute;
+                right: 0;
+                text-align: right;
             }
         </style>
     </head>
@@ -37,11 +97,31 @@
         </div>
         <div class="section-title">Test results</div>
 <% for(var ua in stats) { %>
-        <div id="ua-header-<%= ua.replace(' ', '-') %>" class="ua-header button" style="background: rgb(<%= parseInt(stats[ua].status * 200) %>, <%= parseInt((1 - stats[ua].status) * 170) %>, <%= parseInt(stats[ua].status * 80) %>);">
-            <%= ua %> (<%= parseInt((1 - stats[ua].status) * 100) %>% success)
+        <%
+            var headerStyle = '';
+            var reportColor;
+            if(stats[ua].status) {
+                reportColor = 'rgb(255, 137, 137)';
+                headerStyle += 'background: ' + reportColor + ';cursor:pointer;'
+            }
+            else {
+                reportColor = 'rgb(173, 246, 173)';
+                headerStyle += 'background: ' + reportColor + ';cursor:default;'
+            }
+        %>
+        <div id="ua-header-<%= ua.replace(' ', '-') %>" class="ua-header-box button" style="<%= headerStyle %>">
+            <div class="ua-header" >
+                <%= ua %> (<%= parseInt((1 - stats[ua].status) * 100) %>% success)
+            </div>
+            <% if(stats[ua].status) { %>
+            <div id="expand-<%= ua.replace(' ', '-') %>" class="expand-hint"></div>
+            <% } %>
         </div>
     <% if(stats[ua]['full-failure'].length || stats[ua]['partial-failure'].length) { %>
-    <div id="details-<%= ua.replace(' ', '-') %>" class="error-report collapsed" style="border: 2px solid rgb(<%= parseInt(stats[ua].status * 200) %>, <%= parseInt((1 - stats[ua].status) * 170) %>, <%= parseInt(stats[ua].status * 80) %>);">
+    <div
+        id="details-<%= ua.replace(' ', '-') %>"
+        class="error-report closed"
+        style="background: <%= reportColor %>;">
     <% } %>
 
         <% if(stats[ua]['full-failure'].length) { %>
@@ -49,9 +129,20 @@
             
             <% stats[ua]['full-failure'].forEach(function(conditions) { %>
 
-            <div>
-                <a class="relaunch button action" href="<%= conditions.testLocation %>/tests?tags=<%= conditions.tags.replace(' ', '') %>&oneShot=true&env=<%= conditions.env %>" target="_blank"> test </a>
-                <span> <b><%= conditions.tags.split(',')[0] %></b><%= conditions.tags.split(',').length > 1 ? ',':'' %> <%= conditions.tags.split(',').slice(1).join(',') %> </span>
+            <div class="failed-test-line">
+                <span class="first-tag">
+                    <%= conditions.tags.split(',')[0] %>
+                </span>
+                <span class="other-tags">
+                    <%= conditions.tags.split(',').length > 1 ? ',':'' %>
+                    <%= conditions.tags.split(',').slice(1).join(',') %>
+                </span>
+                <a
+                    class="relaunch button action"
+                    href="<%= conditions.testLocation %>/tests?tags=<%= conditions.tags.replace(' ', '') %>&oneShot=true&env=<%= conditions.env %>"
+                    target="_blank">
+                    Relaunch
+                </a>
             </div>
 
             <% }); %>
@@ -62,8 +153,19 @@
             <% stats[ua]['partial-failure'].forEach(function(conditions) { %>
 
             <div>
-                <a class="relaunch button action" href="<%= conditions.testLocation %>/tests?tags=<%= conditions.tags.replace(' ', '') %>&oneShot=true&env=<%= conditions.env %>" target="_blank"> test </a>
-                <span> <b><%= conditions.tags.split(',')[0] %></b><%= conditions.tags.split(',').length > 1 ? ',':'' %> <%= conditions.tags.split(',').slice(1).join(',') %> </span>
+                <span>
+                    <b>
+                        <%= conditions.tags.split(',')[0] %>
+                    </b>
+                    <%= conditions.tags.split(',').length > 1 ? ',':'' %>
+                    <%= conditions.tags.split(',').slice(1).join(',') %>
+                </span>
+                <a
+                    class="relaunch button action"
+                    href="<%= conditions.testLocation %>/tests?tags=<%= conditions.tags.replace(' ', '') %>&oneShot=true&env=<%= conditions.env %>"
+                    target="_blank">
+                    Relaunch
+                </a>
             </div>
 
             <% }); %>
@@ -71,20 +173,31 @@
 
     <% if(stats[ua]['full-failure'].length || stats[ua]['partial-failure'].length) { %>
     </div>
-    <br/>
     <% } %>
 <% } %>
 
         <script>
             function toggleDetails(resultSetName) {
-                var target = document.getElementById('details-' + resultSetName);
-                if(target.classList.contains('collapsed')) {
-                    target.classList.remove('collapsed');
+                var details = document.getElementById('details-' + resultSetName);
+                var expand = document.getElementById('expand-' + resultSetName);
+                var header = document.getElementById('ua-header-' + resultSetName);
+
+                if(details.classList.contains('closed')) {
+                    details.classList.remove('closed');
+                    details.classList.add('open');
+                    header.classList.add('open');
+                    header.classList.remove('closed');
+                    expand.classList.add('closed');
+                    expand.classList.remove('open');
                 }
                 else {
-                    target.classList.add('collapsed');
+                    details.classList.add('closed');
+                    details.classList.remove('open');
+                    header.classList.remove('open');
+                    header.classList.add('closed');
+                    expand.classList.add('open');
+                    expand.classList.remove('closed');
                 }
-
             }
 
             var element;
