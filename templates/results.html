@@ -2,46 +2,11 @@
 <html>
     <head>
         <title>test report</title>
+        <link rel="stylesheet" type="text/css" href="/styles/base.css"/>
         <style type="text/css">
-            body {
-                margin: 0;
-                padding: 0;
-
-                font-family: sans-serif;
-                background: #eee;
-            }
-
-            .meep-meep {
-                color: rgb(253, 253, 198);
-            }
-
-            .title {
-                padding-left: 10px;
-                line-height: 36px;
-                color: white;
-                background: black;
-                font-size: 17px;
-            }
-
-            .section-title {
-                color: #444;
-                background: rgb(230, 219, 219);
-                line-height: 36px;
-                font-size: 14px;
-                margin-top: 20px;
-                padding-left: 10px;
-            }
-
             .ua-header {
                 display: inline-block;
-                text-align: center;
-                padding: 0 12px 0 12px;
                 margin: 5px 5px 0 10px;
-                color: white;
-                cursor: pointer;
-                border-radius: 3px;
-                font-size: 14px;
-                line-height: 36px;
             }
 
             .error-report {
@@ -55,17 +20,7 @@
 
             .relaunch {
                 display: inline-block;
-                padding: 3px;
-                width: 40px;
-                margin-top: 10px;
-
-                background: #5362b9;
-                color: white;
-                text-decoration: none;
-                text-align: center;
-                font-size: 14px;
-                line-height: 36px;
-                border-radius: 3px;
+                margin-top: 2px;
             }
 
             .collapsed {
@@ -74,10 +29,15 @@
         </style>
     </head>
     <body>
-        <div class="title"><span class="meep-meep">Meep-Meep</span> - <b>Test results</b></div>
+        <div class="title">
+            <!--<span class="logo"></span>-->
+            <span class="meep-meep">Meep-Meep</span>
+            -
+            Test results
+        </div>
         <div class="section-title">Test results</div>
 <% for(var ua in stats) { %>
-        <div id="ua-header-<%= ua.replace(' ', '-') %>" class="ua-header" style="background: rgb(<%= parseInt(stats[ua].status * 200) %>, <%= parseInt((1 - stats[ua].status) * 170) %>, <%= parseInt(stats[ua].status * 80) %>);">
+        <div id="ua-header-<%= ua.replace(' ', '-') %>" class="ua-header button" style="background: rgb(<%= parseInt(stats[ua].status * 200) %>, <%= parseInt((1 - stats[ua].status) * 170) %>, <%= parseInt(stats[ua].status * 80) %>);">
             <%= ua %> (<%= parseInt((1 - stats[ua].status) * 100) %>% success)
         </div>
     <% if(stats[ua]['full-failure'].length || stats[ua]['partial-failure'].length) { %>
@@ -90,7 +50,7 @@
             <% stats[ua]['full-failure'].forEach(function(conditions) { %>
 
             <div>
-                <a class="relaunch" href="<%= conditions.testLocation %>/tests?tags=<%= conditions.tags.replace(' ', '') %>&oneShot=true&env=<%= conditions.env %>" target="_blank"> test </a>
+                <a class="relaunch button action" href="<%= conditions.testLocation %>/tests?tags=<%= conditions.tags.replace(' ', '') %>&oneShot=true&env=<%= conditions.env %>" target="_blank"> test </a>
                 <span> <b><%= conditions.tags.split(',')[0] %></b><%= conditions.tags.split(',').length > 1 ? ',':'' %> <%= conditions.tags.split(',').slice(1).join(',') %> </span>
             </div>
 
@@ -102,7 +62,7 @@
             <% stats[ua]['partial-failure'].forEach(function(conditions) { %>
 
             <div>
-                <a class="relaunch" href="<%= conditions.testLocation %>/tests?tags=<%= conditions.tags.replace(' ', '') %>&oneShot=true&env=<%= conditions.env %>" target="_blank"> test </a>
+                <a class="relaunch button action" href="<%= conditions.testLocation %>/tests?tags=<%= conditions.tags.replace(' ', '') %>&oneShot=true&env=<%= conditions.env %>" target="_blank"> test </a>
                 <span> <b><%= conditions.tags.split(',')[0] %></b><%= conditions.tags.split(',').length > 1 ? ',':'' %> <%= conditions.tags.split(',').slice(1).join(',') %> </span>
             </div>
 
