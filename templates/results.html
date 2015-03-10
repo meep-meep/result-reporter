@@ -8,6 +8,7 @@
                 display: table;
                 margin: 5px 5px 0 10px;  
                 color: #444;
+                text-shadow: 0 1px rgba(255, 255, 255, 0.4);
                 -webkit-user-select: none;          
                 -moz-user-select: none;          
                 -ms-user-select: none;
@@ -38,6 +39,10 @@
                 height: 36px;
             }
 
+            .failed-test-line:nth-child(2n) {
+                background: rgba(255,255,255, 0.1);
+            }
+
             .first-tag,
             .other-tags {
                 line-height: 36px;
@@ -45,7 +50,11 @@
 
             .first-tag {
                 margin-left: 10px;
-                font-weight: bold;
+            }
+
+            .other-tags {
+                color: rgba(0, 0, 0, 0.6);
+                text-shadow: 0 1px rgba(255, 255, 255, 0.3);
             }
 
             .error-report {
@@ -84,9 +93,11 @@
 
             .relaunch {
                 color: #444;
+                text-shadow: 0 1px rgba(255, 255, 255, 0.5);
                 background: rgb(255, 227, 227);
                 position: absolute;
                 right: 0;
+                top: 2px;
                 text-align: right;
             }
         </style>
@@ -98,7 +109,6 @@
             -
             Test results
         </div>
-        <div class="section-title">Test results</div>
 <% for(var ua in stats) { %>
         <%
             var headerStyle = '';
@@ -134,10 +144,10 @@
 
             <div class="failed-test-line">
                 <span class="first-tag">
-                    <%= conditions.tags.split(',')[0] %>
+                    <%= conditions.tags.split(',')[0] %><%= conditions.tags.split(',').length > 1 ? ',':'' %>
                 </span>
                 <span class="other-tags">
-                    <%= conditions.tags.split(',').length > 1 ? ',':'' %>
+                    
                     <%= conditions.tags.split(',').slice(1).join(',') %>
                 </span>
                 <a
