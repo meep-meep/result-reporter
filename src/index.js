@@ -14,7 +14,7 @@ var customReader = null;
 var triggers = new EventEmitter();
 
 
-var app = express();
+var app = express.Router();
 
 
 app.get(
