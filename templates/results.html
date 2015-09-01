@@ -111,6 +111,10 @@
                 -Test results
             </span>
         </div>
+<% if(!Object.keys(stats).length) { %>
+<div class="error-report">There is no result for the moment.</div>
+<% } %>
+
 <% for(var ua in stats) { %>
         <%
             var headerStyle = '';
