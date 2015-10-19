@@ -53,7 +53,7 @@ app.get(
                     )
                     .then(function(rendererView) {
                         response.send(rendererView);
-                    })
+                    });
             });
     });
 
@@ -123,19 +123,23 @@ function makeStats(results) {
         }
     });
 
-    for(var target in stats) {
-        // aggregate result sets
-        stats[target].tests.forEach(function(testStats, index) {
-            var ratio = testStats.failures / testStats.total;
-            stats[target].status = Math.max(stats[target].status, ratio);
-            if(ratio === 1) {
-                stats[target]['full-failure'].push(stats[target].tests[index].conditions);
-            }
-            else if(ratio > 0) {
-                stats[target]['partial-failure'].push(stats[target].tests[index].conditions);
-            }
+    Object.keys(stats)
+        .map(function(statName) {
+            return stats[statName];
+        })
+        .forEach(function(target) {
+            // aggregate result sets
+            target.tests.forEach(function(testStats, index) {
+                var ratio = testStats.failures / testStats.total;
+                target.status = Math.max(target.status, ratio);
+                if(ratio === 1) {
+                    target['full-failure'].push(target.tests[index].conditions);
+                }
+                else if(ratio > 0) {
+                    target['partial-failure'].push(target.tests[index].conditions);
+                }
+            });
         });
-    }
 
     return stats;
 }
