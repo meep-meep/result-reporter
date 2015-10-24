@@ -1,0 +1,19 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/Users/tsatse/.nvm/v0.10.40/bin/node',
+1 verbose cli   '/Users/tsatse/.nvm/v0.10.40/bin/npm',
+1 verbose cli   'test' ]
+2 info using npm@1.4.28
+3 info using node@v0.10.40
+4 error Error: ENOENT, open '/Users/tsatse/projects/meep-meep/result-reporter/src/package.json'
+5 error If you need help, you may report this *entire* log,
+5 error including the npm and node versions, at:
+5 error     <http://github.com/npm/npm/issues>
+6 error System Darwin 14.5.0
+7 error command "/Users/tsatse/.nvm/v0.10.40/bin/node" "/Users/tsatse/.nvm/v0.10.40/bin/npm" "test"
+8 error cwd /Users/tsatse/projects/meep-meep/result-reporter/src
+9 error node -v v0.10.40
+10 error npm -v 1.4.28
+11 error path /Users/tsatse/projects/meep-meep/result-reporter/src/package.json
+12 error code ENOENT
+13 error errno 34
+14 verbose exit [ 34, true ]
