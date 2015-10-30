@@ -170,7 +170,7 @@ module.exports = {
     },
 
     setDataAdapter: function setDataAdapter(adapter) {
-        setCustomReader(adapter.reader.bind(adapter));
-        addWriter(adapter.writer.bind(adapter));
+        this.setCustomReader(adapter.reader.bind(adapter));
+        this.addWriter(adapter.writer.bind(adapter));
     }
 };

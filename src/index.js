@@ -2,6 +2,7 @@ var express = require('express');
 
 
 var app = express.Router();
+var actions = require('./actions');
 
 
 app.get(
@@ -43,9 +44,9 @@ app.get(
 
 module.exports = {
     middleware: app,
-    setDataAdapter: actions.setDataAdapter,
-    setReader: actions.setCustomReader,
-    addWriter: actions.addWriter,
+    setDataAdapter: actions.setDataAdapter.bind(actions),
+    setReader: actions.setCustomReader.bind(actions),
+    addWriter: actions.addWriter.bind(actions),
 
     on: actions.triggers.on.bind(actions.triggers),
     once: actions.triggers.once.bind(actions.triggers),
